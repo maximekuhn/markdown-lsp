@@ -1,8 +1,8 @@
 # This workflow performs the following checks:
 #   - code is correctly formatted
+#   - no unhandled clippy warnings
 #   - code builds
 #   - all tests pass
-#   - no unhandled clippy warnings
 
 name: Rust CI
 
@@ -17,13 +17,25 @@ env:
 jobs:
   fmt:
     runs-on: ubuntu-latest
+    name: Code correctly formatted
     steps:
       - uses: actions/checkout@v4
       - name: Check code format
         run: cargo fmt --check
 
+  linter:
+    runs-on: ubuntu-latest
+    name: No unhandled clippy warnings
+    needs: [fmt]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check code format
+        run: cargo clippy -- -D warnings
+
   build:
     runs-on: ubuntu-latest
+    name: Code builds
+    needs: [linter]
     steps:
       - uses: actions/checkout@v4
       - name: Check if code builds
