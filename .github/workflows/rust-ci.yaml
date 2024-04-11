@@ -3,6 +3,10 @@
 #   - no unhandled clippy warnings
 #   - code builds
 #   - all tests pass
+#
+# TODO:
+#   - integration tests
+#   - maybe unit tests in `server` crate ? (if any)
 
 name: Rust CI
 
@@ -29,7 +33,7 @@ jobs:
     needs: [fmt]
     steps:
       - uses: actions/checkout@v4
-      - name: Check code format
+      - name: Check clippy warnings
         run: cargo clippy -- -D warnings
 
   build:
@@ -41,3 +45,21 @@ jobs:
       - name: Check if code builds
         run: cargo build --locked
 
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests pass
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if unit tests pass
+        run: cargo test --lib
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests pass
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if integration tests pass
+        run: |
+          echo "TODO"
