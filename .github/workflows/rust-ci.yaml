@@ -1,0 +1,70 @@
+# This workflow performs the following checks:
+#   - code is correctly formatted
+#   - no unhandled clippy warnings
+#   - code builds
+#   - all tests pass
+#
+# TODO:
+#   - integration tests
+#   - maybe unit tests in `server` crate ? (if any)
+
+name: Rust CI
+
+on:
+  push:
+    branches:
+      - "**"
+
+# Don't waste CI time, cancel previous workflow on the same branch 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    name: Code correctly formatted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check code format
+        run: cargo fmt --check
+
+  linter:
+    runs-on: ubuntu-latest
+    name: No unhandled clippy warnings
+    needs: [fmt]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check clippy warnings
+        run: cargo clippy -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    name: Code builds
+    needs: [linter]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if code builds
+        run: cargo build --locked
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests pass
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if unit tests pass
+        run: cargo test --lib
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Integration tests pass
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if integration tests pass
+        run: |
+          echo "TODO"

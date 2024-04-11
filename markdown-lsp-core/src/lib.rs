@@ -1,6 +1,5 @@
 use lsp_server::{Connection, IoThreads, Message, Request, Response};
-use lsp_types::{request::HoverRequest, InitializeResult, ServerInfo};
-use serde::Serialize;
+use lsp_types::{InitializeResult, ServerInfo};
 use std::error::Error;
 use text_document_hover::handle_text_document_hover;
 use tracing::{error, info};
@@ -10,18 +9,20 @@ mod text_document_hover;
 
 pub struct LspContext {
     connection: Connection,
-    io_threads: IoThreads,
+    _io_threads: IoThreads,
 }
 
-impl LspContext {
-    pub fn new() -> Self {
+impl Default for LspContext {
+    fn default() -> Self {
         let (connection, io_threads) = Connection::stdio();
         Self {
             connection,
-            io_threads,
+            _io_threads: io_threads,
         }
     }
+}
 
+impl LspContext {
     pub fn init(&self) -> Result<(), Box<dyn Error>> {
         // XXX are we sure the first request is always `initialize` ?
         // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#initialize
@@ -71,6 +72,7 @@ impl LspContext {
                 Message::Notification(_) => unimplemented!("Notification not implemented yet"),
             }
         }
+
         Ok(())
     }
 }
