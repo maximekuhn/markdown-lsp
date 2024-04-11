@@ -69,7 +69,7 @@ fn handle(
         .ok_or(HandleTextDocumentHoverError::InvalidCharNumber)?;
 
     let mut hover_content = String::new();
-    if let Some(header_level) = header_level(&hovered_line) {
+    if let Some(header_level) = header_level(hovered_line) {
         hover_content.push_str(format!("Header {}\n", header_level).as_str());
     }
 
@@ -79,18 +79,18 @@ fn handle(
 }
 
 fn header_level(line: &str) -> Option<usize> {
-    if !line.starts_with("#") {
+    if !line.starts_with('#') {
         return None;
     }
 
     let current_len = line.len();
-    let r1 = line.replace("#", "");
+    let r1 = line.replace('#', "");
 
     if r1.len() == current_len {
         return None;
     }
 
-    if !r1.starts_with(" ") {
+    if !r1.starts_with(' ') {
         return None;
     }
 
