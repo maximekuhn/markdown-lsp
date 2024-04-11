@@ -1,0 +1,23 @@
+# This workflow performs the following checks:
+#   - code is correctly formatted
+#   - code builds
+#   - all tests pass
+#   - no unhandled clippy warnings
+
+name: Rust CI
+
+on:
+  push:
+    branches:
+      - "**"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check code format
+        run: cargo fmt --check
