@@ -1,5 +1,5 @@
 use lsp_server::Request;
-use lsp_types::{request::HoverRequest, Hover, HoverContents, HoverParams, MarkedString};
+use lsp_types::{Hover, HoverContents, HoverParams, MarkedString};
 use std::error::Error;
 use tracing::info;
 
