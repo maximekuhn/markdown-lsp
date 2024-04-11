@@ -12,15 +12,17 @@ pub struct LspContext {
     _io_threads: IoThreads,
 }
 
-impl LspContext {
-    pub fn new() -> Self {
+impl Default for LspContext {
+    fn default() -> Self {
         let (connection, io_threads) = Connection::stdio();
         Self {
             connection,
             _io_threads: io_threads,
         }
     }
+}
 
+impl LspContext {
     pub fn init(&self) -> Result<(), Box<dyn Error>> {
         // XXX are we sure the first request is always `initialize` ?
         // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#initialize
