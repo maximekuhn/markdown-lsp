@@ -56,7 +56,7 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    name: Unit tests pass
+    name: Integration tests pass
     needs: [build]
     steps:
       - uses: actions/checkout@v4
