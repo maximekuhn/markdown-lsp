@@ -1,15 +1,15 @@
-use lsp_server::{Connection, IoThreads, Message, Request, Response};
+use lsp_server::{Connection, IoThreads, Message, Request, Response, ResponseError};
 use lsp_types::{InitializeResult, ServerInfo};
 use std::error::Error;
 use text_document_hover::handle_text_document_hover;
-use tracing::{error, info};
+use tracing::info;
 
 mod server_configuration;
 mod text_document_hover;
 
 pub struct LspContext {
     connection: Connection,
-    _io_threads: IoThreads,
+    io_threads: IoThreads,
 }
 
 impl Default for LspContext {
@@ -17,21 +17,21 @@ impl Default for LspContext {
         let (connection, io_threads) = Connection::stdio();
         Self {
             connection,
-            _io_threads: io_threads,
+            io_threads,
         }
     }
 }
 
 impl LspContext {
     pub fn init(&self) -> Result<(), Box<dyn Error>> {
-        // XXX are we sure the first request is always `initialize` ?
-        // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#initialize
+        // wait for client initialization request
         let (req_id, _client_init_params) = self.connection.initialize_start()?;
         info!(
             lsp_event = "received client initialization request",
             ?req_id
         );
 
+        // send initialization response to the client
         let server_capabilities = server_configuration::server_capabilities();
         let initialize_result = InitializeResult {
             capabilities: server_capabilities,
@@ -42,7 +42,6 @@ impl LspContext {
         };
         let init_res_json = serde_json::json!(initialize_result);
         self.connection.initialize_finish(req_id, init_res_json)?;
-
         info!(lsp_event = "sent initialization response");
 
         Ok(())
@@ -56,23 +55,35 @@ impl LspContext {
                     let request_id = request.id.clone();
                     match handle_request(request) {
                         Ok(response) => {
-                            self.connection
-                                .sender
-                                .send(Message::Response(Response {
-                                    id: request_id,
-                                    result: Some(response),
-                                    error: None,
-                                }))
-                                .expect("failed to send response to the client");
+                            self.connection.sender.send(Message::Response(Response {
+                                id: request_id,
+                                result: Some(response),
+                                error: None,
+                            }))?
                         }
-                        Err(err) => error!(lsp_event = "failed to handle request", ?err),
+                        Err(err) => self.connection.sender.send(Message::Response(Response {
+                            id: request_id,
+                            result: None,
+                            error: Some(ResponseError {
+                                // internal error
+                                // TODO: return real error
+                                code: -32603,
+                                message: err.to_string(),
+                                data: None,
+                            }),
+                        }))?,
                     }
                 }
                 Message::Response(_) => panic!("Can the client send a response ?"),
-                Message::Notification(_) => unimplemented!("Notification not implemented yet"),
+                Message::Notification(_) => { /* TODO */ }
             }
         }
 
+        Ok(())
+    }
+
+    pub fn shutdown_gracefully(self) -> Result<(), Box<dyn Error>> {
+        self.io_threads.join()?;
         Ok(())
     }
 }

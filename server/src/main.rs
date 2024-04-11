@@ -10,6 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut lsp_context = markdown_lsp_core::LspContext::default();
     lsp_context.init()?;
     lsp_context.main_loop()?;
+    lsp_context.shutdown_gracefully()?;
 
     Ok(())
 }
